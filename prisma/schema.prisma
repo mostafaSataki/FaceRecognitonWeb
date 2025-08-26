@@ -1,0 +1,67 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Camera {
+  id          String   @id @default(cuid())
+  name        String
+  rtspUrl     String   @map("rtsp_url")
+  isActive    Boolean  @default(true) @map("is_active")
+  type        CameraType @default(ENTRY) // ENTRY or EXIT
+  doorId      String?  @map("door_id") // Associated door
+  location    String?  // Camera location description
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  detections  Detection[]
+  door        Door?    @relation(fields: [doorId], references: [id])
+}
+
+model Door {
+  id          String   @id @default(cuid())
+  name        String
+  location    String?  // Door location
+  description String?  // Door description
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  cameras     Camera[]
+}
+
+model Detection {
+  id          String   @id @default(cuid())
+  cameraId    String   @map("camera_id")
+  timestamp   DateTime @default(now())
+  imagePath   String?  @map("image_path")
+  metadata    String?  @map("metadata") // JSON string for additional data
+  confidence  Float?   @map("confidence")
+  direction   Direction? @default(UNKNOWN) // ENTRY, EXIT, or UNKNOWN
+  
+  camera      Camera   @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  
+  @@map("detections")
+}
+
+enum CameraType {
+  ENTRY
+  EXIT
+  BOTH
+}
+
+enum Direction {
+  ENTRY
+  EXIT
+  UNKNOWN
+}
