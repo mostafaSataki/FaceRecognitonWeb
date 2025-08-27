@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Vazirmatn } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 
@@ -13,22 +13,28 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const vazirmatn = Vazirmatn({
+  variable: "--font-vazirmatn",
+  subsets: ["arabic"],
+  weight: ["300", "400", "500", "700", "900"],
+});
+
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "سیستم تشخیص چهره - سیستم امنیتی هوشمند",
+  description: "سیستم تشخیص چهره و امنیتی هوشمند با قابلیت‌های پیشرفته شناسایی و مدیریت",
+  keywords: ["تشخیص چهره", "سیستم امنیتی", "هوش مصنوعی", "دوربین مداربسته", "Next.js", "TypeScript"],
+  authors: [{ name: "تیم توسعه" }],
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "سیستم تشخیص چهره هوشمند",
+    description: "سیستم امنیتی هوشمند با قابلیت تشخیص چهره",
+    url: "https://example.com",
+    siteName: "سیستم امنیتی",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "سیستم تشخیص چهره هوشمند",
+    description: "سیستم امنیتی هوشمند با قابلیت تشخیص چهره",
   },
 };
 
@@ -38,9 +44,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fa" dir="rtl" suppressHydrationWarning>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        className={`${geistSans.variable} ${geistMono.variable} ${vazirmatn.variable} font-sans antialiased bg-background text-foreground`}
       >
         {children}
         <Toaster />

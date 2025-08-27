@@ -138,7 +138,7 @@ export class CameraStreamingService {
               },
             });
 
-            // Emit via WebSocket
+            // Emit via WebSocket with image data
             if (this.socketServer) {
               this.socketServer.emit('faceDetected', {
                 cameraId,
@@ -146,6 +146,7 @@ export class CameraStreamingService {
                   ...detection,
                   metadata: JSON.parse(detection.metadata || '{}'),
                 },
+                imageData: faceImageData, // Send the actual image data
               });
             }
           }
