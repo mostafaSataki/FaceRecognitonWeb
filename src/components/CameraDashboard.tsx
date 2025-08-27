@@ -14,9 +14,11 @@ interface CameraDashboardProps {
   cameras: Camera[];
   detections: Detection[];
   onDeleteCamera: (cameraId: string) => void;
+  onEditCamera: (camera: Camera) => void;
+  onToggleCamera: (cameraId: string, isActive: boolean) => void;
 }
 
-export function CameraDashboard({ cameras, detections, onDeleteCamera }: CameraDashboardProps) {
+export function CameraDashboard({ cameras, detections, onDeleteCamera, onEditCamera, onToggleCamera }: CameraDashboardProps) {
   const [selectedCamera, setSelectedCamera] = useState<string | null>(null);
   const [liveViewCamera, setLiveViewCamera] = useState<string | null>(null);
   const [activeCameras, setActiveCameras] = useState<string[]>([]);
@@ -80,6 +82,8 @@ export function CameraDashboard({ cameras, detections, onDeleteCamera }: CameraD
             onStopCamera={handleStopCamera}
             onViewLive={handleViewLive}
             onDeleteCamera={onDeleteCamera}
+            onEditCamera={onEditCamera}
+            onToggleCamera={onToggleCamera}
           />
         </CardContent>
       </Card>

@@ -6,27 +6,42 @@ import { AddCameraForm } from '@/components/AddCameraForm';
 import { DoorManagement, AddDoorForm, DoorList } from '@/components/DoorManagement';
 import { RealTimeDetectionFeed } from '@/components/RealTimeDetectionFeed';
 import { FaceDetectionDemo } from '@/components/FaceDetectionDemo';
-import { Camera, Detection, Door } from '@/types';
+import { PersonManagement } from '@/components/PersonManagement';
+import { AttendanceManagement } from '@/components/AttendanceManagement';
+import { Camera, Detection, Door, Person, AttendanceLog } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Camera as CameraIcon, DoorOpen, Activity, LayoutDashboard, Settings, Users } from 'lucide-react';
+import { Camera as CameraIcon, DoorOpen, Activity, LayoutDashboard, Settings, Users, User, Clock, Fingerprint } from 'lucide-react';
 
-type ViewType = 'cameras' | 'doors' | 'activity' | 'settings' | 'demo';
+type ViewType = 'cameras' | 'doors' | 'persons' | 'attendance' | 'activity' | 'settings' | 'demo';
 
 export default function Home() {
   const [cameras, setCameras] = useState<Camera[]>([]);
   const [detections, setDetections] = useState<Detection[]>([]);
   const [doors, setDoors] = useState<Door[]>([]);
+  const [persons, setPersons] = useState<Person[]>([]);
+  const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
+  const [selectedCamera, setSelectedCamera] = useState<Camera | null>(null);
+  const [latestDetection, setLatestDetection] = useState<Detection | null>(null);
   const [showAddCameraForm, setShowAddCameraForm] = useState(false);
   const [showAddDoorForm, setShowAddDoorForm] = useState(false);
   const [currentView, setCurrentView] = useState<ViewType>('cameras');
   const [loading, setLoading] = useState(true);
 
+  // Ensure arrays are always arrays
+  const safeCameras = Array.isArray(cameras) ? cameras : [];
+  const safeDetections = Array.isArray(detections) ? detections : [];
+  const safeDoors = Array.isArray(doors) ? doors : [];
+  const safePersons = Array.isArray(persons) ? persons : [];
+  const safeAttendanceLogs = Array.isArray(attendanceLogs) ? attendanceLogs : [];
+
   useEffect(() => {
     fetchCameras();
     fetchDetections();
     fetchDoors();
+    fetchPersons();
+    fetchAttendanceLogs();
   }, []);
 
   const fetchCameras = async () => {
@@ -58,6 +73,26 @@ export default function Home() {
       setDoors(data);
     } catch (error) {
       console.error('Error fetching doors:', error);
+    }
+  };
+
+  const fetchPersons = async () => {
+    try {
+      const response = await fetch('/api/persons');
+      const data = await response.json();
+      setPersons(data);
+    } catch (error) {
+      console.error('Error fetching persons:', error);
+    }
+  };
+
+  const fetchAttendanceLogs = async () => {
+    try {
+      const response = await fetch('/api/attendance');
+      const data = await response.json();
+      setAttendanceLogs(data);
+    } catch (error) {
+      console.error('Error fetching attendance logs:', error);
     }
   };
 
@@ -134,6 +169,29 @@ export default function Home() {
     }
   };
 
+  const handleEditCamera = async (camera: Camera) => {
+    console.log('Edit camera:', camera);
+    // TODO: Implement edit camera functionality
+  };
+
+  const handleToggleCamera = async (cameraId: string, isActive: boolean) => {
+    try {
+      const response = await fetch(`/api/cameras/${cameraId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ isActive }),
+      });
+
+      if (response.ok) {
+        await fetchCameras();
+      }
+    } catch (error) {
+      console.error('Error toggling camera:', error);
+    }
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'cameras':
@@ -141,9 +199,11 @@ export default function Home() {
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div className="xl:col-span-2">
               <CameraDashboard
-                cameras={cameras}
-                detections={detections}
+                cameras={safeCameras}
+                detections={safeDetections}
                 onDeleteCamera={handleDeleteCamera}
+                onEditCamera={handleEditCamera}
+                onToggleCamera={handleToggleCamera}
               />
             </div>
             <div className="xl:col-span-1">
@@ -154,7 +214,7 @@ export default function Home() {
       case 'doors':
         return (
           <DoorList
-            doors={doors}
+            doors={safeDoors}
             onEditDoor={(doorId) => console.log('Edit door:', doorId)}
             onDeleteDoor={handleDeleteDoor}
           />
@@ -165,20 +225,20 @@ export default function Home() {
             {/* System Overview */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{cameras.length}</div>
+                <div className="text-2xl font-bold text-blue-600">{safeCameras.length}</div>
                 <div className="text-sm text-gray-600">کل دوربین‌ها</div>
               </div>
               <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-2xl font-bold text-green-600">{doors.length}</div>
+                <div className="text-2xl font-bold text-green-600">{safeDoors.length}</div>
                 <div className="text-sm text-gray-600">کل گیت‌ها</div>
               </div>
               <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-2xl font-bold text-purple-600">{detections.length}</div>
+                <div className="text-2xl font-bold text-purple-600">{safeDetections.length}</div>
                 <div className="text-sm text-gray-600">کل تشخیص‌ها</div>
               </div>
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {cameras.filter(c => c.isActive).length}
+                  {safeCameras.filter(c => c.isActive).length}
                 </div>
                 <div className="text-sm text-gray-600">دوربین‌های فعال</div>
               </div>
@@ -203,7 +263,7 @@ export default function Home() {
                           <p>دوربینی یافت نشد</p>
                         </div>
                       ) : (
-                        cameras.map((camera) => (
+                        safeCameras.map((camera) => (
                           <div 
                             key={camera.id}
                             className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
@@ -235,11 +295,11 @@ export default function Home() {
                             <div className="text-sm text-gray-600">
                               {camera.location && <div>مکان: {camera.location}</div>}
                               <div>آخرین تشخیص: {
-                                detections
+                                safeDetections
                                   .filter(d => d.cameraId === camera.id)
                                   .length > 0 
                                   ? new Date(
-                                      Math.max(...detections
+                                      Math.max(...safeDetections
                                         .filter(d => d.cameraId === camera.id)
                                         .map(d => new Date(d.timestamp).getTime())
                                       )
@@ -552,6 +612,20 @@ export default function Home() {
             </div>
           </div>
         );
+      case 'persons':
+        return (
+          <PersonManagement
+            onEditPerson={(person) => console.log('Edit person:', person)}
+            onDeletePerson={(personId) => console.log('Delete person:', personId)}
+            onEnrollFace={(person) => console.log('Enroll face for person:', person)}
+          />
+        );
+      case 'attendance':
+        return (
+          <AttendanceManagement
+            onViewDetails={(log) => console.log('View attendance details:', log)}
+          />
+        );
       default:
         return null;
     }
@@ -619,14 +693,28 @@ export default function Home() {
                 view="cameras"
                 icon={CameraIcon}
                 label="دوربین"
-                count={cameras.length}
+                count={safeCameras.length}
                 badgeVariant="default"
               />
               <MenuItem
                 view="doors"
                 icon={DoorOpen}
                 label="گیت"
-                count={doors.length}
+                count={safeDoors.length}
+              />
+              <MenuItem
+                view="persons"
+                icon={Users}
+                label="افراد"
+                count={safePersons.length}
+                badgeVariant="default"
+              />
+              <MenuItem
+                view="attendance"
+                icon={Clock}
+                label="تردد"
+                count={safeAttendanceLogs.length}
+                badgeVariant="default"
               />
               <MenuItem
                 view="settings"
@@ -635,7 +723,7 @@ export default function Home() {
               />
               <MenuItem
                 view="demo"
-                icon={Users}
+                icon={Fingerprint}
                 label="دمو"
                 badgeVariant="outline"
               />
@@ -653,6 +741,8 @@ export default function Home() {
                   {currentView === 'activity' && 'داشبورد'}
                   {currentView === 'cameras' && 'مدیریت دوربین'}
                   {currentView === 'doors' && 'مدیریت گیت'}
+                  {currentView === 'persons' && 'مدیریت افراد'}
+                  {currentView === 'attendance' && 'مدیریت تردد'}
                   {currentView === 'settings' && 'تنظیمات سیستم'}
                   {currentView === 'demo' && 'دموی تشخیص چهره'}
                 </h1>
@@ -660,25 +750,38 @@ export default function Home() {
                   {currentView === 'activity' && 'نمای کلی سیستم، لیست دوربین‌ها و اطلاعات تشخیص چهره'}
                   {currentView === 'cameras' && 'مدیریت دوربین و مشاهده تشخیص‌های زنده'}
                   {currentView === 'doors' && 'سازماندهی گیت‌ها و دوربین‌های مرتبط'}
+                  {currentView === 'persons' && 'ثبت و مدیریت افراد و انرولمنت چهره'}
+                  {currentView === 'attendance' && 'مدیریت ترددها و گزارش‌گیری حضور و غیاب'}
                   {currentView === 'settings' && 'پیکربندی تنظیمات و ترجیحات سیستم'}
                   {currentView === 'demo' && 'آزمایش تشخیص چهره زنده با داده‌های شبیه‌سازی شده'}
                 </p>
               </div>
               {/* Add buttons based on current view */}
-              {(currentView === 'cameras' || currentView === 'doors') && (
+              {(currentView === 'cameras' || currentView === 'doors' || currentView === 'persons') && (
                 <Button
-                  onClick={() => currentView === 'cameras' ? setShowAddCameraForm(true) : setShowAddDoorForm(true)}
+                  onClick={() => {
+                    if (currentView === 'cameras') setShowAddCameraForm(true);
+                    else if (currentView === 'doors') setShowAddDoorForm(true);
+                    // For persons, the add button is handled within the PersonManagement component
+                  }}
                   className="flex items-center gap-2"
                 >
-                  {currentView === 'cameras' ? (
+                  {currentView === 'cameras' && (
                     <>
                       <CameraIcon className="w-4 h-4" />
                       افزودن دوربین
                     </>
-                  ) : (
+                  )}
+                  {currentView === 'doors' && (
                     <>
                       <DoorOpen className="w-4 h-4" />
                       افزودن گیت
+                    </>
+                  )}
+                  {currentView === 'persons' && (
+                    <>
+                      <Users className="w-4 h-4" />
+                      افزودن شخص
                     </>
                   )}
                 </Button>

@@ -31,7 +31,55 @@ export interface Detection {
   metadata?: string;
   confidence?: number;
   direction?: 'ENTRY' | 'EXIT' | 'UNKNOWN';
+  personId?: string;
   camera?: Camera;
+  person?: Person;
+}
+
+export interface Person {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nationalCode?: string;
+  employeeId?: string;
+  email?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
+  avatarPath?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  faceEnrollments?: FaceEnrollment[];
+  detections?: Detection[];
+  attendanceLogs?: AttendanceLog[];
+}
+
+export interface FaceEnrollment {
+  id: string;
+  personId: string;
+  faceData: string;
+  imagePath: string;
+  confidence: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+  person?: Person;
+}
+
+export interface AttendanceLog {
+  id: string;
+  personId: string;
+  cameraId: string;
+  doorId?: string;
+  timestamp: string;
+  type: 'ENTRY' | 'EXIT';
+  confidence?: number;
+  imagePath?: string;
+  metadata?: string;
+  person?: Person;
+  camera?: Camera;
+  door?: Door;
 }
 
 export interface FaceDetection {

@@ -24,8 +24,10 @@ model Camera {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   
-  detections  Detection[]
-  door        Door?    @relation(fields: [doorId], references: [id])
+  // Relations
+  detections      Detection[]
+  door            Door?    @relation(fields: [doorId], references: [id])
+  attendanceLogs  AttendanceLog[]
 }
 
 model Door {
@@ -37,7 +39,9 @@ model Door {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
   
-  cameras     Camera[]
+  // Relations
+  cameras         Camera[]
+  attendanceLogs  AttendanceLog[]
 }
 
 model Detection {
@@ -48,10 +52,75 @@ model Detection {
   metadata    String?  @map("metadata") // JSON string for additional data
   confidence  Float?   @map("confidence")
   direction   Direction? @default(UNKNOWN) // ENTRY, EXIT, or UNKNOWN
+  personId    String?  @map("person_id") // Associated person if recognized
   
   camera      Camera   @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  person      Person?  @relation(fields: [personId], references: [id])
   
   @@map("detections")
+}
+
+model Person {
+  id            String   @id @default(cuid())
+  firstName     String   @map("first_name")
+  lastName      String   @map("last_name")
+  nationalCode  String?  @unique @map("national_code")
+  employeeId    String?  @unique @map("employee_id")
+  email         String?  @unique
+  phone         String?
+  department    String?
+  position      String?
+  avatarPath    String?  @map("avatar_path") // Profile photo
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  faceEnrollments FaceEnrollment[]
+  detections      Detection[]
+  attendanceLogs  AttendanceLog[]
+  
+  @@map("persons")
+}
+
+model FaceEnrollment {
+  id          String   @id @default(cuid())
+  personId    String   @map("person_id")
+  faceData    String   // Encoded face data (JSON string)
+  imagePath   String   @map("image_path") // Path to enrolled face image
+  confidence  Float    // Enrollment confidence score
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  
+  @@map("face_enrollments")
+}
+
+model AttendanceLog {
+  id          String   @id @default(cuid())
+  personId    String   @map("person_id")
+  cameraId    String   @map("camera_id")
+  doorId      String?  @map("door_id")
+  timestamp   DateTime @default(now())
+  type        AttendanceType // ENTRY, EXIT
+  confidence  Float?   // Recognition confidence
+  imagePath   String?  @map("image_path") // Path to captured image
+  metadata    String?  @map("metadata") // Additional data (JSON)
+  
+  // Relations
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  camera      Camera   @relation(fields: [cameraId], references: [id], onDelete: Cascade)
+  door        Door?    @relation(fields: [doorId], references: [id])
+  
+  @@map("attendance_logs")
+}
+
+enum AttendanceType {
+  ENTRY
+  EXIT
 }
 
 enum CameraType {
